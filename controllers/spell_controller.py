@@ -58,7 +58,7 @@ def get_all_Spells():
         }
         spell_list.append(spell_dict)
 
-    return jsonify({"message": "Spells founded.", "results": spell_list}), 200
+    return jsonify({"message": "spells founded.", "results": spell_list}), 200
 
 # ============================
 

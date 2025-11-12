@@ -12,8 +12,8 @@ def get_all_books_route():
     return controllers.get_all_books()
 
 @book.route('/books/available' , methods=['GET'])
-def get_available_Books():
-    return get_available_Books()
+def get_available_Books_route():
+    return controllers.get_available_Books()
 
 @book.route('/book/<book_id>', methods=['PUT'])
 def update_book_by_id_route(book_id):

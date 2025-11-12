@@ -2,6 +2,9 @@ from flask import jsonify, request
 
 from db import db
 from models.wizard import Wizards
+from models.school import Schools
+from models.spell import Spells
+from models.wizard_specializations import WizardSpecialization
 
 def add_wizard():
     post_data = request.form if request.form else request.get_json()
@@ -29,38 +32,108 @@ def add_wizard():
 
     query = db.session.query(Wizards).filter(Wizards.wizard_name == values['wizard_name']).first()
 
-    wizard = {
-        "wizard_id" : query.wizard_id,
-        "school_id": query.school_id,
-        "wizard_name": query.wizard_name,
-        "house": query.house,
-        "year_enrolled": query.year_enrolled,
-        "magical_power_level":query.magical_power_level,
-        "active":query.active
-    }
+    wizard_list = []
 
-    return jsonify({"message":"wizard created", "result":wizard}), 201
+    school = db.session.query(Schools).filter(Schools.school_id == query.school_id).first()
+    school_dict = {
+        "school_id": school.school_id,
+        "school_name": school.school_name,
+        "location": school.location,
+        "founded_year": school.founded_year,
+        "headmaster": school.headmaster
+    }
+    
+    specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == query.wizard_id).all()
+
+    spells_list = []
+    for spell in specializations:
+        spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+        
+        spell_dict = {
+            "spell_id": spell_q.spell_id,
+            "spell_name": spell_q.spell_name,
+            "incantation": spell_q.incantation,
+            "difficulty_level": spell_q.difficulty_level,
+            "spell_type": spell_q.spell_type,
+            "description": spell_q.description
+        }
+
+        specialization_dict = {
+            "spell": spell_dict,
+            "proficiency_level": spell.proficiency_level,
+            "date_learned": spell.date_learned
+        }
+        spells_list.append(specialization_dict)
+
+
+    wizard_dict = {
+    "wizard_id" : query.wizard_id,
+    "wizard_name": query.wizard_name,
+    "house": query.house,
+    "year_enrolled": query.year_enrolled,
+    "magical_power_level":query.magical_power_level,
+    "active":query.active,
+    "school":school_dict,
+    "spell":spells_list
+    }
+    wizard_list.append(wizard_dict)
+
+    return jsonify({"message": "wizards created.", "result": wizard_list}), 200
 
 # ===========================
 
 def get_all_wizards():
     query = db.session.query(Wizards).all()
+    
 
     wizard_list = []
 
     for wizard in query:
+        school = db.session.query(Schools).filter(Schools.school_id == wizard.school_id).first()
+        school_dict = {
+            "school_id": school.school_id,
+            "school_name": school.school_name,
+            "location": school.location,
+            "founded_year": school.founded_year,
+            "headmaster": school.headmaster
+        }
+
+        specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == wizard.wizard_id).all()
+
+        spells_list = []
+        for spell in specializations:
+            spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+           
+            spell_dict = {
+                "spell_id": spell_q.spell_id,
+                "spell_name": spell_q.spell_name,
+                "incantation": spell_q.incantation,
+                "difficulty_level": spell_q.difficulty_level,
+                "spell_type": spell_q.spell_type,
+                "description": spell_q.description
+            }
+
+            specialization_dict = {
+                "spell": spell_dict,
+                "proficiency_level": spell.proficiency_level,
+                "date_learned": spell.date_learned
+            }
+            spells_list.append(specialization_dict)
+
+
         wizard_dict = {
         "wizard_id" : wizard.wizard_id,
-        "school_id": wizard.school_id,
         "wizard_name": wizard.wizard_name,
         "house": wizard.house,
         "year_enrolled": wizard.year_enrolled,
         "magical_power_level":wizard.magical_power_level,
-        "active":wizard.active
+        "active":wizard.active,
+        "school":school_dict,
+        "spell":spells_list
         }
         wizard_list.append(wizard_dict)
 
-    return jsonify({"message": "Wizards founded.", "results": wizard_list}), 200
+    return jsonify({"message": "wizards founded.", "results": wizard_list}), 200
 
 # ============================
 
@@ -69,17 +142,53 @@ def get_wizard_by_id(wizard_id):
     if not query:
         return jsonify({"message": "wizard has not found"}), 404
     
-    wizard={
-       "wizard_id" : query.wizard_id,
-        "school_id": query.school_id,
-        "wizard_name": query.wizard_name,
-        "house": query.house,
-        "year_enrolled": query.year_enrolled,
-        "magical_power_level":query.magical_power_level,
-        "active":query.active
-    }
+    wizard_list = []
 
-    return jsonify({"message":"wizard found", "result": wizard}), 200
+    school = db.session.query(Schools).filter(Schools.school_id == query.school_id).first()
+    school_dict = {
+        "school_id": school.school_id,
+        "school_name": school.school_name,
+        "location": school.location,
+        "founded_year": school.founded_year,
+        "headmaster": school.headmaster
+    }
+    
+    specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == query.wizard_id).all()
+
+    spells_list = []
+    for spell in specializations:
+        spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+        
+        spell_dict = {
+            "spell_id": spell_q.spell_id,
+            "spell_name": spell_q.spell_name,
+            "incantation": spell_q.incantation,
+            "difficulty_level": spell_q.difficulty_level,
+            "spell_type": spell_q.spell_type,
+            "description": spell_q.description
+        }
+
+        specialization_dict = {
+            "spell": spell_dict,
+            "proficiency_level": spell.proficiency_level,
+            "date_learned": spell.date_learned
+        }
+        spells_list.append(specialization_dict)
+
+
+    wizard_dict = {
+    "wizard_id" : query.wizard_id,
+    "wizard_name": query.wizard_name,
+    "house": query.house,
+    "year_enrolled": query.year_enrolled,
+    "magical_power_level":query.magical_power_level,
+    "active":query.active,
+    "school":school_dict,
+    "spell":spells_list
+    }
+    wizard_list.append(wizard_dict)
+
+    return jsonify({"message": "wizards founded.", "results": wizard_list}), 200
 
 # ===============================
 
@@ -88,41 +197,113 @@ def get_active_wizards():
     if not query:
         return jsonify({"message": "no active wizard found"}), 404
     
+
     active_wizard_list = []
+
     for wizard in query:
-        active_wizard_dict = {
+        school = db.session.query(Schools).filter(Schools.school_id == wizard.school_id).first()
+        school_dict = {
+            "school_id": school.school_id,
+            "school_name": school.school_name,
+            "location": school.location,
+            "founded_year": school.founded_year,
+            "headmaster": school.headmaster
+        }
+
+        specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == wizard.wizard_id).all()
+
+        spells_list = []
+        for spell in specializations:
+            spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+           
+            spell_dict = {
+                "spell_id": spell_q.spell_id,
+                "spell_name": spell_q.spell_name,
+                "incantation": spell_q.incantation,
+                "difficulty_level": spell_q.difficulty_level,
+                "spell_type": spell_q.spell_type,
+                "description": spell_q.description
+            }
+
+            specialization_dict = {
+                "spell": spell_dict,
+                "proficiency_level": spell.proficiency_level,
+                "date_learned": spell.date_learned
+            }
+            spells_list.append(specialization_dict)
+
+
+        wizard_dict = {
         "wizard_id" : wizard.wizard_id,
-        "school_id": wizard.school_id,
         "wizard_name": wizard.wizard_name,
         "house": wizard.house,
         "year_enrolled": wizard.year_enrolled,
         "magical_power_level":wizard.magical_power_level,
-        "active":wizard.active
+        "active":wizard.active,
+        "school":school_dict,
+        "spell":spells_list
         }
-        active_wizard_list.append(active_wizard_dict)
+        active_wizard_list.append(wizard_dict)
 
-    return jsonify({"message": "wizards found", "results": active_wizard_list}), 200
+    return jsonify({"message": "wizard founded.", "result": active_wizard_list}), 200
 
-# ===========================
+    
+# ==============
+
 def get_wizards_in_house(house):
     query = db.session.query(Wizards).filter(Wizards.house == house).all()
     if not query:
         return jsonify({"message": "no wizard founded with the house provided."}), 404
+    
+
     wizards_in_house_list = []
+
     for wizard in query:
-        wizards_in_house_dict = {
+        school = db.session.query(Schools).filter(Schools.school_id == wizard.school_id).first()
+        school_dict = {
+            "school_id": school.school_id,
+            "school_name": school.school_name,
+            "location": school.location,
+            "founded_year": school.founded_year,
+            "headmaster": school.headmaster
+        }
+
+        specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == wizard.wizard_id).all()
+
+        spells_list = []
+        for spell in specializations:
+            spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+           
+            spell_dict = {
+                "spell_id": spell_q.spell_id,
+                "spell_name": spell_q.spell_name,
+                "incantation": spell_q.incantation,
+                "difficulty_level": spell_q.difficulty_level,
+                "spell_type": spell_q.spell_type,
+                "description": spell_q.description
+            }
+
+            specialization_dict = {
+                "spell": spell_dict,
+                "proficiency_level": spell.proficiency_level,
+                "date_learned": spell.date_learned
+            }
+            spells_list.append(specialization_dict)
+
+
+        wizard_dict = {
         "wizard_id" : wizard.wizard_id,
-        "school_id": wizard.school_id,
         "wizard_name": wizard.wizard_name,
         "house": wizard.house,
         "year_enrolled": wizard.year_enrolled,
         "magical_power_level":wizard.magical_power_level,
-        "active":wizard.active
+        "active":wizard.active,
+        "school":school_dict,
+        "spell":spells_list
         }
-        wizards_in_house_list.append(wizards_in_house_dict)
+        wizards_in_house_list.append(wizard_dict)
 
-    return jsonify({"message": "wizards found", "results": wizards_in_house_list}), 200
-
+    return jsonify({"message": "wizards founded.", "results": wizards_in_house_list}), 200
 
 # ============================
 
@@ -130,20 +311,56 @@ def get_wizards_magical_power_level(magical_power_level):
     query = db.session.query(Wizards).filter(Wizards.magical_power_level == int(magical_power_level)).all()
     if not query:
         return jsonify({"message": "no wizard founded with the magical power level provided"}), 404
+
+
     wizards_magical_power_level_list = []
+
     for wizard in query:
-        wizards_magical_power_level_dict = {
+        school = db.session.query(Schools).filter(Schools.school_id == wizard.school_id).first()
+        school_dict = {
+            "school_id": school.school_id,
+            "school_name": school.school_name,
+            "location": school.location,
+            "founded_year": school.founded_year,
+            "headmaster": school.headmaster
+        }
+
+        specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == wizard.wizard_id).all()
+
+        spells_list = []
+        for spell in specializations:
+            spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+           
+            spell_dict = {
+                "spell_id": spell_q.spell_id,
+                "spell_name": spell_q.spell_name,
+                "incantation": spell_q.incantation,
+                "difficulty_level": spell_q.difficulty_level,
+                "spell_type": spell_q.spell_type,
+                "description": spell_q.description
+            }
+
+            specialization_dict = {
+                "spell": spell_dict,
+                "proficiency_level": spell.proficiency_level,
+                "date_learned": spell.date_learned
+            }
+            spells_list.append(specialization_dict)
+
+
+        wizard_dict = {
         "wizard_id" : wizard.wizard_id,
-        "school_id": wizard.school_id,
         "wizard_name": wizard.wizard_name,
         "house": wizard.house,
         "year_enrolled": wizard.year_enrolled,
         "magical_power_level":wizard.magical_power_level,
-        "active":wizard.active
+        "active":wizard.active,
+        "school":school_dict,
+        "spell":spells_list
         }
-        wizards_magical_power_level_list.append(wizards_magical_power_level_dict)
+        wizards_magical_power_level_list.append(wizard_dict)
 
-    return jsonify({"message": "wizards found", "results": wizards_magical_power_level_list}), 200
+    return jsonify({"message": "wizards founded.", "results": wizards_magical_power_level_list}), 200 
 
 
 # ===========================
@@ -167,21 +384,54 @@ def update_wizard_by_id(wizard_id):
         db.session.rollback()
         return jsonify({"message": "unable to update record"}),400
 
-    
-    update_wizard_query = db.session.query(Wizards).filter(Wizards.wizard_id==wizard_id).first()
+    wizard_list = []
 
-    wizard={
-        "wizard_id" : update_wizard_query.wizard_id,
-        "school_id": update_wizard_query.school_id,
-        "wizard_name": update_wizard_query.wizard_name,
-        "house": update_wizard_query.house,
-        "year_enrolled": update_wizard_query.year_enrolled,
-        "magical_power_level":update_wizard_query.magical_power_level,
-        "active":update_wizard_query.active
+    school = db.session.query(Schools).filter(Schools.school_id == query.school_id).first()
+    school_dict = {
+        "school_id": school.school_id,
+        "school_name": school.school_name,
+        "location": school.location,
+        "founded_year": school.founded_year,
+        "headmaster": school.headmaster
     }
+    
+    specializations = db.session.query(WizardSpecialization).filter(WizardSpecialization.wizard_id == query.wizard_id).all()
 
-    return jsonify ({"message": "record updated.", "result": wizard}), 200
+    spells_list = []
+    for spell in specializations:
+        spell_q = db.session.query(Spells).filter(Spells.spell_id == spell.spell_id).first()
+        
+        spell_dict = {
+            "spell_id": spell_q.spell_id,
+            "spell_name": spell_q.spell_name,
+            "incantation": spell_q.incantation,
+            "difficulty_level": spell_q.difficulty_level,
+            "spell_type": spell_q.spell_type,
+            "description": spell_q.description
+        }
 
+        specialization_dict = {
+            "spell": spell_dict,
+            "proficiency_level": spell.proficiency_level,
+            "date_learned": spell.date_learned
+        }
+        spells_list.append(specialization_dict)
+
+
+    wizard_dict = {
+    "wizard_id" : query.wizard_id,
+    "wizard_name": query.wizard_name,
+    "house": query.house,
+    "year_enrolled": query.year_enrolled,
+    "magical_power_level":query.magical_power_level,
+    "active":query.active,
+    "school":school_dict,
+    "spell":spells_list
+    }
+    wizard_list.append(wizard_dict)
+
+    return jsonify({"message": "record updated.", "result": wizard_list}), 200
+   
 # ===============================
 
 def delete_wizard_by_id(wizard_id):
